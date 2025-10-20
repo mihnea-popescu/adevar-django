@@ -1,0 +1,41 @@
+
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: adevar-django
+    command: gunicorn mysite.wsgi:application --bind 0.0.0.0:8000 --workers 3 --reload
+    volumes:
+      - .:/app
+    ports:
+      - "127.0.0.1:8000:8000"
+    depends_on:
+      - db
+    env_file:
+      - .env
+    restart: always
+
+  db:
+    image: postgres:13
+    container_name: adevar-db
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: always
+
+  mailhog:
+    image: mailhog/mailhog
+    container_name: adevar-mailhog
+    ports:
+      - "127.0.0.1:1025:1025"
+      - "127.0.0.1:8025:8025"
+    restart: always
+
+volumes:
+  postgres_data:
