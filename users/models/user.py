@@ -6,6 +6,8 @@ from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, UserM
 from django.utils import timezone as django_timezone
 
 from core.time.timezones import get_local_time
+import random
+import string
 
 
 class UserQuerySet(models.QuerySet):
@@ -44,8 +46,8 @@ class UserManager(DjangoUserManager.from_queryset(UserQuerySet)):
 
 
 class User(AbstractBaseUser, PermissionsMixin):
-    username = models.CharField(max_length=50, unique=True)
-    email = models.EmailField(blank=True, null=True, unique=True)
+    username = models.CharField(max_length=50)
+    email = models.EmailField(blank=True, null=True, unique=True, default=None)
     phone_number = models.CharField(max_length=15, blank=True, null=True, unique=True)
 
     date_of_birth = models.DateField(null=True, blank=True)
@@ -53,7 +55,6 @@ class User(AbstractBaseUser, PermissionsMixin):
     last_name = models.CharField(max_length=50, blank=True)
 
     is_staff = models.BooleanField(default=False)
-    is_active = models.BooleanField(default=True)
 
     language_tag = models.CharField(max_length=32, blank=True, null=True)
     country_code = models.CharField(max_length=8, blank=True, null=True)
@@ -77,6 +78,27 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     def __str__(self):
         return self.email or self.phone_number or self.username
+
+    def generate_username_from_email(self, email: str) -> str:
+        """
+        Generate a unique username based on the user's email address.
+        Example:
+            "mihnea@example.com" → "mihnea"
+            If "mihnea" already exists → "mihnea_3k7"
+        """
+        # Extract the part before @
+        base_username = email.split("@")[0].lower()
+
+        # Remove invalid characters just in case
+        base_username = "".join(ch for ch in base_username if ch.isalnum() or ch in ("_", "."))
+
+        # If username exists, append random 3-char suffix
+        username = base_username
+        while User.objects.filter(username=username).exists():
+            suffix = ''.join(random.choices(string.ascii_lowercase + string.digits, k=3))
+            username = f"{base_username}_{suffix}"
+
+        return username
 
     def save(self, *args, **kwargs):
         self.last_activity = django_timezone.now()
