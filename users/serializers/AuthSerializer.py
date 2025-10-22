@@ -13,8 +13,8 @@ class LoginSerializer(serializers.Serializer):
 
 
 class ChangePasswordSerializer(serializers.Serializer):
-    password = serializers.CharField(required=True, min_length=4, max_length=100)
-    new_password = serializers.CharField(required=True, min_length=4, max_length=100)
+    password = serializers.CharField(required=True, min_length=8, max_length=100)
+    new_password = serializers.CharField(required=True, min_length=8, max_length=100)
 
     def validate_new_password(self, value):
         """
