@@ -166,3 +166,5 @@ REST_FRAMEWORK = {
 }
 
 DEFAULT_CONTENT_TYPE = "application/json"
+
+BACKEND_URL = os.getenv('BACKEND_URL')

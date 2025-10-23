@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Adevar - Reset Password</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background-color: #f4f4f4;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+
+    .container {
+      background: #fff;
+      padding: 2rem;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      text-align: center;
+      width: 100%;
+      max-width: 380px;
+    }
+
+    h1 {
+      margin-bottom: 1.5rem;
+      color: #222;
+      font-size: 1.8rem;
+    }
+
+    form {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    input {
+      width: 100%;
+      max-width: 300px;
+      padding: 0.6rem;
+      font-size: 1rem;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      box-sizing: border-box;
+      transition: border-color 0.2s ease;
+    }
+
+    input:focus {
+      border-color: #007AFF;
+      outline: none;
+    }
+
+    button {
+      width: 100%;
+      max-width: 300px;
+      padding: 0.7rem;
+      background-color: #007AFF;
+      border: none;
+      color: white;
+      border-radius: 8px;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: background-color 0.2s ease;
+    }
+
+    button:hover {
+      background-color: #0063cc;
+    }
+
+    .message {
+      margin-top: 1rem;
+      font-size: 0.95rem;
+    }
+
+    .success {
+      color: #2ecc71;
+    }
+
+    .error {
+      color: #e74c3c;
+    }
+
+    .error-list {
+      text-align: left;
+      color: #e74c3c;
+      font-size: 0.9rem;
+      margin: -0.5rem 0 0.5rem 0;
+      padding-left: 0;
+      list-style: none;
+      width: 100%;
+      max-width: 300px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Adevar</h1>
+    <form id="resetForm" method="POST">
+      {% csrf_token %}
+      <input type="hidden" name="email" value="{{ email }}">
+
+      <input type="password" name="new_password" placeholder="Enter new password" required>
+      <ul id="new_password_errors" class="error-list"></ul>
+
+      <input type="password" name="confirm_password" placeholder="Confirm new password" required>
+      <ul id="confirm_password_errors" class="error-list"></ul>
+
+      <button type="submit">Reset Password</button>
+      <div id="message" class="message"></div>
+    </form>
+  </div>
+
+  <script>
+    // --- CSRF helper ---
+    function getCookie(name) {
+      let cookieValue = null;
+      if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+          const cookie = cookies[i].trim();
+          if (cookie.substring(0, name.length + 1) === (name + '=')) {
+            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+            break;
+          }
+        }
+      }
+      return cookieValue;
+    }
+    const csrftoken = getCookie('csrftoken');
+
+    // --- Form handler ---
+    const form = document.getElementById('resetForm');
+    const msg = document.getElementById('message');
+    const newPasswordErrors = document.getElementById('new_password_errors');
+    const confirmPasswordErrors = document.getElementById('confirm_password_errors');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      msg.textContent = '';
+      newPasswordErrors.innerHTML = '';
+      confirmPasswordErrors.innerHTML = '';
+
+      const newPassword = form.new_password.value;
+      const confirmPassword = form.confirm_password.value;
+
+      // ✅ Client-side check for password match
+      if (newPassword !== confirmPassword) {
+        confirmPasswordErrors.innerHTML = '<li>Passwords do not match.</li>';
+        msg.textContent = '❌ Please fix the errors below.';
+        msg.className = 'message error';
+        return;
+      }
+
+      const data = {
+        email: form.email.value,
+        new_password: newPassword,
+        confirm_password: confirmPassword,
+      };
+
+      const res = await fetch(window.location.href, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': csrftoken,
+        },
+        credentials: 'include',
+        body: JSON.stringify(data),
+      });
+
+      const json = await res.json().catch(() => ({}));
+
+      if (res.ok) {
+        msg.textContent = '✅ Password successfully reset!';
+        msg.className = 'message success';
+        form.reset();
+      } else {
+        msg.textContent = '❌ Please fix the errors below.';
+        msg.className = 'message error';
+
+        if (json.new_password) {
+          json.new_password.forEach(err => {
+            const li = document.createElement('li');
+            li.textContent = err;
+            newPasswordErrors.appendChild(li);
+          });
+        }
+
+        if (json.confirm_password) {
+          json.confirm_password.forEach(err => {
+            const li = document.createElement('li');
+            li.textContent = err;
+            confirmPasswordErrors.appendChild(li);
+          });
+        }
+      }
+    });
+  </script>
+</body>
+</html>

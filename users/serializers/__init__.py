@@ -1,2 +1,3 @@
-from .AuthSerializer import LoginSerializer, ChangePasswordSerializer
-from .UserSerializer import UserSerializer
+from .auth_serializer import LoginSerializer, ChangePasswordSerializer
+from .user_serializer import UserSerializer
+from .password_reset_serializer import ResetPasswordRequestSerializer, ResetPasswordSerializer
