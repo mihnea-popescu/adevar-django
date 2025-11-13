@@ -24,14 +24,16 @@ def generate_media_presigned_url(key: str, expires_in: int = 300):
     )
     return url
 
-
 def generate_post_image_path(instance, filename):
     user_id = instance.user.id
     now = datetime.utcnow()
 
-    prefix = "dev/" if os.getenv("DEBUG") == "True" else ""
+    img_uuid = uuid.uuid4().hex
+    shard = img_uuid[:2]
 
-    folder = f"{prefix}posts/images/{now.year}/{now.month}/{now.day}/{user_id}"
-    filename = f"{uuid.uuid4().hex}.webp"
+    prefix = "dev/" if settings.DEBUG else ""
+
+    folder = f"{prefix}posts/images/{now.year}/{now.month}/{now.day}/{shard}/{user_id}"
+    filename = f"{img_uuid}.webp"
 
     return f"{folder}/{filename}"
