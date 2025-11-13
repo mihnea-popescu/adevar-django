@@ -10,7 +10,7 @@ class PostSerializer(serializers.ModelSerializer):
         model = Post
         fields = ['id', 'image', 'image_url', 'created_at']
         extra_kwargs = {
-            "image": {"required": True, "allow_null": False},
+            "image": {"required": True, "allow_null": False, "write_only": True},
         }
 
     def get_image_url(self, obj):
